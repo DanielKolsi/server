@@ -19083,6 +19083,10 @@ static struct st_mysql_sys_var* innobase_system_variables[]= {
 };
 
 maria_declare_plugin(xtradb)
+i_s_innodb_cmp,
+i_s_innodb_cmp_per_index,
+i_s_innodb_locks,
+i_s_innodb_trx,
 { /* InnoDB */
   MYSQL_STORAGE_ENGINE_PLUGIN,
   &innobase_storage_engine,
@@ -19101,14 +19105,10 @@ maria_declare_plugin(xtradb)
 i_s_xtradb_read_view,
 i_s_xtradb_internal_hash_tables,
 i_s_xtradb_rseg,
-i_s_innodb_trx,
-i_s_innodb_locks,
 i_s_innodb_lock_waits,
-i_s_innodb_cmp,
 i_s_innodb_cmp_reset,
 i_s_innodb_cmpmem,
 i_s_innodb_cmpmem_reset,
-i_s_innodb_cmp_per_index,
 i_s_innodb_cmp_per_index_reset,
 i_s_innodb_buffer_page,
 i_s_innodb_buffer_page_lru,

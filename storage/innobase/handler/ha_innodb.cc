@@ -17458,6 +17458,10 @@ static struct st_mysql_sys_var* innobase_system_variables[]= {
 };
 
 maria_declare_plugin(innobase)
+i_s_innodb_cmp,
+i_s_innodb_cmp_per_index,
+i_s_innodb_locks,
+i_s_innodb_trx,
 {
   MYSQL_STORAGE_ENGINE_PLUGIN,
   &innobase_storage_engine,
@@ -17473,14 +17477,10 @@ maria_declare_plugin(innobase)
   INNODB_VERSION_STR,         /* string version */
   MariaDB_PLUGIN_MATURITY_STABLE /* maturity */
 },
-i_s_innodb_trx,
-i_s_innodb_locks,
 i_s_innodb_lock_waits,
-i_s_innodb_cmp,
 i_s_innodb_cmp_reset,
 i_s_innodb_cmpmem,
 i_s_innodb_cmpmem_reset,
-i_s_innodb_cmp_per_index,
 i_s_innodb_cmp_per_index_reset,
 i_s_innodb_buffer_page,
 i_s_innodb_buffer_page_lru,
