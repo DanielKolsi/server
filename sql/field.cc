@@ -8496,6 +8496,7 @@ void Field_longstr::compress_zlib(uchar *to, size_t *to_length,
         deflateEnd(&stream) == Z_OK)
     {
       *to_length= stream.next_out - to;
+      status_var_increment(thd->status_var.column_compressions);
       return;
     }
   }
@@ -8555,6 +8556,7 @@ void Field_longstr::uncompress_zlib(String *to,
   {
     to->set_charset(charset());
     to->length(stream.total_out);
+    status_var_increment(get_thd()->status_var.column_decompressions);
     return;
   }
   my_error(ER_ZLIB_Z_DATA_ERROR, MYF(0));

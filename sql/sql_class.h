@@ -721,6 +721,9 @@ typedef struct system_variables
 
 typedef struct system_status_var
 {
+  ulong column_compressions;
+  ulong column_decompressions;
+
   ulong com_stat[(uint) SQLCOM_END];
   ulong com_create_tmp_table;
   ulong com_drop_tmp_table;
