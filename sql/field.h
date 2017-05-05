@@ -3218,7 +3218,6 @@ private:
   String *val_str(String *, String *);
   double val_real(void);
   longlong val_int(void);
-  void sort_string(uchar *to, uint length);
 
   uint get_key_image(uchar *buff, uint length, imagetype type_arg)
   { DBUG_ASSERT(0); return 0; }
@@ -3472,7 +3471,6 @@ private:
   String *val_str(String *, String *);
   double val_real(void);
   longlong val_int(void);
-  void sort_string(uchar *buff, uint length);
 
   uint get_key_image(uchar *buff, uint length, imagetype type_arg)
   { DBUG_ASSERT(0); return 0; }

@@ -7549,26 +7549,29 @@ int Field_varstring::key_cmp(const uchar *a,const uchar *b)
 
 void Field_varstring::sort_string(uchar *to,uint length)
 {
-  uint tot_length=  length_bytes == 1 ? (uint) *ptr : uint2korr(ptr);
+  String buf;
+
+  val_str(&buf, &buf);
 
   if (field_charset == &my_charset_bin)
   {
     /* Store length last in high-byte order to sort longer strings first */
     if (length_bytes == 1)
-      to[length-1]= tot_length;
+      to[length - 1]= buf.length();
     else
-      mi_int2store(to+length-2, tot_length);
+      mi_int2store(to + length - 2, buf.length());
     length-= length_bytes;
   }
- 
-  tot_length= field_charset->coll->strnxfrm(field_charset,
-                                            to, length,
-                                            char_length() *
-                                            field_charset->strxfrm_multiply,
-                                            ptr + length_bytes, tot_length,
-                                            MY_STRXFRM_PAD_WITH_SPACE |
-                                            MY_STRXFRM_PAD_TO_MAXLEN);
-  DBUG_ASSERT(tot_length == length);
+
+#ifndef DBUG_OFF
+    uint rc=
+#endif
+  field_charset->coll->strnxfrm(field_charset, to, length,
+                                char_length() * field_charset->strxfrm_multiply,
+                                (const uchar*) buf.ptr(), buf.length(),
+                                MY_STRXFRM_PAD_WITH_SPACE |
+                                MY_STRXFRM_PAD_TO_MAXLEN);
+  DBUG_ASSERT(rc == length);
 }
 
 
@@ -7874,34 +7877,6 @@ longlong Field_varstring_compressed::val_int(void)
   return Converter_strntoll_with_warn(thd, Warn_filter(thd),
                                       Field_varstring::charset(),
                                       buf.ptr(), buf.length()).result();
-}
-
-
-void Field_varstring_compressed::sort_string(uchar *to, uint length)
-{
-  String buf;
-
-  val_str(&buf, &buf);
-
-  if (field_charset == &my_charset_bin)
-  {
-    /* Store length last in high-byte order to sort longer strings first */
-    if (length_bytes == 1)
-      to[length - 1]= buf.length();
-    else
-      mi_int2store(to + length - 2, buf.length());
-    length-= length_bytes;
-  }
-
-#ifndef DBUG_OFF
-    uint rc=
-#endif
-  field_charset->coll->strnxfrm(field_charset, to, length,
-                                char_length() * field_charset->strxfrm_multiply,
-                                (const uchar*) buf.ptr(), buf.length(),
-                                MY_STRXFRM_PAD_WITH_SPACE |
-                                MY_STRXFRM_PAD_TO_MAXLEN);
-  DBUG_ASSERT(rc == length);
 }
 
 
@@ -8302,33 +8277,30 @@ uint32 Field_blob::sort_length() const
 
 void Field_blob::sort_string(uchar *to,uint length)
 {
-  uchar *blob;
-  uint blob_length=get_length();
+  String buf;
 
-  if (!blob_length && field_charset->pad_char == 0)
+  val_str(&buf, &buf);
+  if (!buf.length() && field_charset->pad_char == 0)
     bzero(to,length);
   else
   {
     if (field_charset == &my_charset_bin)
     {
-      uchar *pos;
-
       /*
         Store length of blob last in blob to shorter blobs before longer blobs
       */
       length-= packlength;
-      pos= to+length;
-
-      store_bigendian(blob_length, pos, packlength);
+      store_bigendian(buf.length(), to + length, packlength);
     }
-    memcpy(&blob, ptr+packlength, sizeof(char*));
-    
-    blob_length= field_charset->coll->strnxfrm(field_charset,
-                                               to, length, length,
-                                               blob, blob_length,
-                                               MY_STRXFRM_PAD_WITH_SPACE |
-                                               MY_STRXFRM_PAD_TO_MAXLEN);
-    DBUG_ASSERT(blob_length == length);
+
+#ifndef DBUG_OFF
+    uint rc=
+#endif
+    field_charset->coll->strnxfrm(field_charset, to, length, length,
+                                  (const uchar*) buf.ptr(), buf.length(),
+                                  MY_STRXFRM_PAD_WITH_SPACE |
+                                  MY_STRXFRM_PAD_TO_MAXLEN);
+    DBUG_ASSERT(rc == length);
   }
 }
 
@@ -8644,36 +8616,6 @@ longlong Field_blob_compressed::val_int(void)
   THD *thd= get_thd();
   return Converter_strntoll_with_warn(thd, Warn_filter(thd), charset(),
                                       buf.ptr(), buf.length()).result();
-}
-
-
-void Field_blob_compressed::sort_string(uchar *to, uint length)
-{
-  String buf;
-
-  val_str(&buf, &buf);
-  if (!buf.length() && field_charset->pad_char == 0)
-    memset(to, 0, length);
-  else
-  {
-    if (field_charset == &my_charset_bin)
-    {
-      /*
-        Store length of blob last in blob to shorter blobs before longer blobs
-      */
-      length-= packlength;
-      store_bigendian(buf.length(), to + length, packlength);
-    }
-
-#ifndef DBUG_OFF
-    uint rc=
-#endif
-    field_charset->coll->strnxfrm(field_charset, to, length, length,
-                                  (const uchar*) buf.ptr(), buf.length(),
-                                  MY_STRXFRM_PAD_WITH_SPACE |
-                                  MY_STRXFRM_PAD_TO_MAXLEN);
-    DBUG_ASSERT(rc == length);
-  }
 }
 
 
