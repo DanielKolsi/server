@@ -1734,9 +1734,8 @@ protected:
   bool cmp_to_string_with_stricter_collation(const Item_bool_func *cond,
                                              const Item *item) const;
   void compress_zlib(uchar *to, size_t *to_length,
-                     const uchar *from, size_t from_length, uint packlength);
-  void uncompress_zlib(String *to,
-                       const uchar *from, size_t from_length, uint packlength);
+                     const uchar *from, size_t from_length);
+  void uncompress_zlib(String *to, const uchar *from, size_t from_length);
 public:
   Field_longstr(uchar *ptr_arg, uint32 len_arg, uchar *null_ptr_arg,
                 uchar null_bit_arg, utype unireg_check_arg,

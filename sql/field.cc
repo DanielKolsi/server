@@ -7822,7 +7822,7 @@ int Field_varstring_compressed::store(const char *from, uint length,
     return -1;
   }
 
-  compress_zlib(zbuf, &zlen, get_data(), stored_length, length_bytes);
+  compress_zlib(zbuf, &zlen, get_data(), stored_length);
   memcpy(get_data(), zbuf, zlen);
   store_length(zlen);
   my_free(zbuf);
@@ -7848,7 +7848,7 @@ int Field_varstring_compressed::store(longlong nr, bool unsigned_val)
 String *Field_varstring_compressed::val_str(String *val_buffer, String *val_ptr)
 {
   ASSERT_COLUMN_MARKED_FOR_READ;
-  uncompress_zlib(val_ptr, get_data(), get_length(), length_bytes);
+  uncompress_zlib(val_ptr, get_data(), get_length());
   return val_ptr;
 }
 
@@ -7857,7 +7857,7 @@ double Field_varstring_compressed::val_real(void)
 {
   ASSERT_COLUMN_MARKED_FOR_READ;
   THD *thd= get_thd();
-  String buf;
+  StringBuffer<100> buf;
   val_str(&buf, &buf);
   return Converter_strntod_with_warn(thd, Warn_filter(thd),
                                      Field_varstring::charset(),
@@ -7869,7 +7869,7 @@ longlong Field_varstring_compressed::val_int(void)
 {
   ASSERT_COLUMN_MARKED_FOR_READ;
   THD *thd= get_thd();
-  String buf;
+  StringBuffer<100> buf;
   val_str(&buf, &buf);
   return Converter_strntoll_with_warn(thd, Warn_filter(thd),
                                       Field_varstring::charset(),
@@ -8449,7 +8449,7 @@ uint Field_blob::is_equal(Create_field *new_field)
   If compression algorithm is 0 then header is immediately followed by
   uncompressed data.
 
-  If compression algorithm is zlib or deflate:
+  If compression algorithm is zlib:
 
   Bits 1-2: N + 1 bytes are occupied by original data length
   Bit    3: unused
@@ -8460,8 +8460,7 @@ uint Field_blob::is_equal(Create_field *new_field)
   followed by compressed data.
 */
 void Field_longstr::compress_zlib(uchar *to, size_t *to_length,
-                                  const uchar *from, size_t from_length,
-                                  uint packlength)
+                                  const uchar *from, size_t from_length)
 {
   THD *thd= get_thd();
   uint level= thd->variables.column_compression_zlib_level;
@@ -8508,8 +8507,7 @@ void Field_longstr::compress_zlib(uchar *to, size_t *to_length,
 
 
 void Field_longstr::uncompress_zlib(String *to,
-                                    const uchar *from, size_t from_length,
-                                    uint packlength)
+                                    const uchar *from, size_t from_length)
 {
   z_stream stream;
   uchar algorithm;
@@ -8539,6 +8537,13 @@ void Field_longstr::uncompress_zlib(String *to,
   }
 
   stream.avail_out= read_lowendian(from, original_pack_length);
+
+  if (stream.avail_out > field_length)
+  {
+    my_error(ER_ZLIB_Z_DATA_ERROR, MYF(0));
+    goto end;
+  }
+
   if (to->alloc(stream.avail_out))
     goto end;
   stream.next_out= (Bytef*) to->ptr();
@@ -8582,7 +8587,7 @@ int Field_blob_compressed::store(const char *from, uint length,
     return -1;
   }
 
-  compress_zlib(zbuf, &zlen, get_ptr(), stored_length, packlength);
+  compress_zlib(zbuf, &zlen, get_ptr(), stored_length);
   value.reset((char*) zbuf, zlen, stored_length + 1, &my_charset_bin);
   set_ptr(zlen, zbuf);
 
@@ -8609,7 +8614,7 @@ int Field_blob_compressed::store(longlong nr, bool unsigned_val)
 String *Field_blob_compressed::val_str(String *val_buffer, String *val_ptr)
 {
   ASSERT_COLUMN_MARKED_FOR_READ;
-  uncompress_zlib(val_ptr, get_ptr(), get_length(), packlength);
+  uncompress_zlib(val_ptr, get_ptr(), get_length());
   return val_ptr;
 }
 
@@ -8617,7 +8622,7 @@ String *Field_blob_compressed::val_str(String *val_buffer, String *val_ptr)
 double Field_blob_compressed::val_real(void)
 {
   ASSERT_COLUMN_MARKED_FOR_READ;
-  String buf;
+  StringBuffer<100> buf;
 
   val_str(&buf, &buf);
   if (!buf.length())
@@ -8631,7 +8636,7 @@ double Field_blob_compressed::val_real(void)
 longlong Field_blob_compressed::val_int(void)
 {
   ASSERT_COLUMN_MARKED_FOR_READ;
-  String buf;
+  StringBuffer<100> buf;
 
   val_str(&buf, &buf);
   if (!buf.length())
